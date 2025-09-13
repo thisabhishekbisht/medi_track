@@ -189,6 +189,11 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                                 }
 
                                 try {
+
+                                  final androidPlugin = NotificationService._notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+                                  androidPlugin?.requestPermission();
+
+
                                   await NotificationService
                                       .scheduleMedicineReminder(
                                     id: updated.id.hashCode,

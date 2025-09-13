@@ -3,6 +3,7 @@ import 'package:medi_track/services/db_service.dart';
 import 'package:provider/provider.dart';
 
 import 'core/app_routes.dart';
+import 'core/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/medicine/presentation/providers/medicine_provider.dart';
 
@@ -11,7 +12,7 @@ Future<void> main() async {
 
   // ✅ Initialize Hive/DB before the app starts
   await DBService.init();
-
+  await NotificationService.init();  // 👈 call static method directly
   runApp(const MediTrackApp());
 }
 
