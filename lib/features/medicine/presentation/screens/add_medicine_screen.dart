@@ -52,15 +52,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Theme
-                  .of(context)
-                  .primaryColor
-                  .withOpacity(0.9),
-              Theme
-                  .of(context)
-                  .colorScheme
-                  .secondary
-                  .withOpacity(0.8),
+              Theme.of(context).primaryColor.withOpacity(0.9),
+              Theme.of(context).colorScheme.secondary.withOpacity(0.8),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -87,8 +80,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                         children: [
                           CircleAvatar(
                             radius: 26,
-                            backgroundColor: Theme
-                                .of(context)
+                            backgroundColor: Theme.of(context)
                                 .primaryColor
                                 .withOpacity(0.15),
                             child: const Icon(Icons.medication_liquid,
@@ -97,8 +89,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                           const SizedBox(width: 12),
                           Text(
                             isEditing ? "Edit Medicine" : "Add Medicine",
-                            style: Theme
-                                .of(context)
+                            style: Theme.of(context)
                                 .textTheme
                                 .titleLarge
                                 ?.copyWith(fontWeight: FontWeight.bold),
@@ -114,7 +105,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                         controller: _nameController,
                         icon: Icons.medication,
                         validator: (v) =>
-                        v == null || v.isEmpty ? "Enter a name" : null,
+                            v == null || v.isEmpty ? "Enter a name" : null,
                       ),
                       const SizedBox(height: 16),
 
@@ -124,7 +115,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                         controller: _dosageController,
                         icon: Icons.local_pharmacy,
                         validator: (v) =>
-                        v == null || v.isEmpty ? "Enter dosage" : null,
+                            v == null || v.isEmpty ? "Enter dosage" : null,
                       ),
                       const SizedBox(height: 16),
 
@@ -147,7 +138,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                           }
                         },
                         validator: (v) =>
-                        v == null || v.isEmpty ? "Pick a time" : null,
+                            v == null || v.isEmpty ? "Pick a time" : null,
                       ),
 
                       const SizedBox(height: 24),
@@ -174,7 +165,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                                   dosage: _dosageController.text.trim(),
                                   times: [_timeController.text.trim()],
                                   isActive:
-                                  widget.existingMedicine?.isActive ?? true,
+                                      widget.existingMedicine?.isActive ?? true,
                                 );
 
                                 if (isEditing) {
@@ -189,11 +180,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                                 }
 
                                 try {
-
-                                  final androidPlugin = NotificationService._notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-                                  androidPlugin?.requestPermission();
-
-
                                   await NotificationService
                                       .scheduleMedicineReminder(
                                     id: updated.id.hashCode,
@@ -204,7 +190,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                                 } catch (e) {
                                   debugPrint("⚠️ Failed to schedule alarm: $e");
                                 }
-                                
+
                                 if (context.mounted) {
                                   Navigator.pop(context,
                                       updated); // return medicine regardless
@@ -248,14 +234,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           readOnly: readOnly,
           onTap: onTap,
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: Theme
-                .of(context)
-                .primaryColor),
+            prefixIcon: Icon(icon, color: Theme.of(context).primaryColor),
             filled: true,
-            fillColor: Theme
-                .of(context)
-                .primaryColor
-                .withOpacity(0.06),
+            fillColor: Theme.of(context).primaryColor.withOpacity(0.06),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide.none,
