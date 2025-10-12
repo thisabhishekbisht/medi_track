@@ -8,8 +8,6 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:workmanager/workmanager.dart';
 
-import 'work_manager_service.dart';
-
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -155,11 +153,16 @@ class NotificationService {
     // Schedule background task
     if (Platform.isAndroid) {
       final initialDelay = scheduled.difference(now);
-      WorkManagerService.scheduleAlarmLog(
-        medicineName: medicineName,
-        dosage: dosage,
+      await Workmanager().registerPeriodicTask(
+        id.toString(),
+        "reschedule a notification",
+        frequency: const Duration(days: 1),
         initialDelay: initialDelay,
-        uniqueName: id.toString(),
+        inputData: <String, dynamic>{
+          'title': "Time to take your medicine 💊",
+          'body': "$medicineName (${dosage.isNotEmpty ? dosage : 'dose'})",
+          'payload': payload,
+        },
       );
     }
   }
