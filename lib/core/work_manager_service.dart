@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:workmanager/workmanager.dart';
 
 const logAlarmTask = "logAlarmTask";
@@ -8,8 +10,18 @@ void callbackDispatcher() {
     if (task == logAlarmTask) {
       final medicineName = inputData?['medicineName'] ?? 'Unknown Medicine';
       final dosage = inputData?['dosage'] ?? 'Unknown Dosage';
-      print(
-          "Alarm fired for $medicineName ($dosage) at ${DateTime.now()} - isolate=1");
+      final message = "Time for $medicineName ($dosage)";
+      print("Alarm fired: $message at ${DateTime.now()} - isolate=1");
+
+      // Show toast
+      Fluttertoast.showToast(
+        msg: message,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
     }
     return Future.value(true);
   });
