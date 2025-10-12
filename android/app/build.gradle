@@ -25,18 +25,18 @@ if (flutterVersionName == null) {
 
 android {
     namespace = "com.abhishek.meditrack.medi_track"
-    compileSdk = 33
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     defaultConfig {
         applicationId = "com.abhishek.meditrack.medi_track"
         minSdk = flutter.minSdkVersion
-        targetSdk = 33
+        targetSdk = 36
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
