@@ -29,24 +29,17 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.abhishek.meditrack.medi_track"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
@@ -55,14 +48,9 @@ android {
 
     dependencies {
         implementation "org.jetbrains.kotlin:kotlin-stdlib:2.2.10"
-
-        // flutter dependencies...
         implementation "androidx.core:core-ktx:1.17.0"
-
-        // 👇 Add this
         coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
     }
-
 
     buildTypes {
         release {
