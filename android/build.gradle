@@ -13,16 +13,6 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
-subprojects {
-    afterEvaluate { project ->
-        if (project.name == 'flutter_native_timezone') {
-            android {
-                namespace 'com.whelksoft.flutter_native_timezone'
-            }
-        }
-    }
-}
-
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
