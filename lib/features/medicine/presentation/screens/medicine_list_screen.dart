@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/app_routes.dart';
-import '../../../../core/constants/strings.dart';
 import '../../../../models/medicine.dart';
 import '../providers/medicine_provider.dart';
+import 'add_medicine_screen.dart'; // Direct import
 
 class MedicineListScreen extends StatefulWidget {
   const MedicineListScreen({super.key});
@@ -18,7 +17,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.appName),
+        title: const Text('Medi-Track'),
       ),
       body: Consumer<MedicineProvider>(
         builder: (context, provider, child) {
@@ -38,7 +37,6 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
               return MedicineCard(
                 medicine: medicine,
                 onDelete: () {
-                  // Show a confirmation dialog before deleting
                   showDialog(
                     context: context,
                     builder: (BuildContext ctx) {
@@ -58,7 +56,6 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                             onPressed: () {
                               provider.deleteMedicine(index);
                               Navigator.of(ctx).pop();
-                              // Show a confirmation snackbar
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('${medicine.name} deleted'),
@@ -73,9 +70,11 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                   );
                 },
                 onEdit: () async {
-                  final updated = await Navigator.of(context).pushNamed(
-                    '/add', // Assuming add screen is for editing too
-                    arguments: medicine,
+                  // Bypass named routes for diagnostics
+                  final updated = await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => AddMedicineScreen(medicine: medicine),
+                    ),
                   );
 
                   if (updated != null && updated is Medicine) {
@@ -93,7 +92,12 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).pushNamed('/add');
+          // Bypass named routes for diagnostics
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const AddMedicineScreen(),
+            ),
+          );
         },
         child: const Icon(Icons.add),
       ),

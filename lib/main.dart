@@ -1,54 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:medi_track/services/db_service.dart';
 import 'package:provider/provider.dart';
 
 import 'core/app_routes.dart';
+import 'core/constants/strings.dart';
 import 'core/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/medicine/presentation/providers/medicine_provider.dart';
+import 'models/medicine.dart';
+import 'services/db_service.dart';
 
-Future<void> main() async {
+void main() async {
+  // Required for using async code in main
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Initialize Hive/DB before the app starts
-  await DBService.init();
-  await NotificationService.init(); // 👈 call static method directly
-  runApp(const MediTrackApp());
+  // Initialize services
+  final dbService = DBService();
+  await dbService.init();
+  await NotificationService.init();
+
+  // For testing: add a dummy medicine
+  // await dbService.addMedicine(
+  //   Medicine(name: 'Aspirin', dosage: '1 tablet', hour: 14, minute: 30),
+  // );
+
+  runApp(MyApp(dbService: dbService));
 }
 
-class MediTrackApp extends StatefulWidget {
-  const MediTrackApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key, required this.dbService});
 
-  @override
-  State<MediTrackApp> createState() => _MediTrackAppState();
-}
-
-class _MediTrackAppState extends State<MediTrackApp> {
-  late final MedicineProvider _medicineProvider;
-
-  @override
-  void initState() {
-    super.initState();
-    _medicineProvider = MedicineProvider(DBService());
-  }
-
-  @override
-  void dispose() {
-    _medicineProvider.dispose();
-    super.dispose();
-  }
+  final DBService dbService;
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: _medicineProvider),
-      ],
+    return ChangeNotifierProvider(
+      create: (_) => MedicineProvider(dbService),
       child: MaterialApp(
-        debugShowCheckedModeBanner: false,
+        title: AppStrings.appName,
         theme: AppTheme.lightTheme,
-        initialRoute: AppRoutes.splash,
+        debugShowCheckedModeBanner: false,
+        // Use the route generator for all navigation
         onGenerateRoute: AppRoutes.generateRoute,
+        // The initial route is now handled by the generator
+        initialRoute: AppRoutes.splash,
       ),
     );
   }
