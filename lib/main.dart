@@ -12,23 +12,22 @@ void main() async {
   // Required for using async code in main
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize services
-  final dbService = DBService();
-  // await dbService.init(); // This was incorrect, DBService does not have an init method
+  // Initialize services BEFORE running the app
+  await DBService.init(); // This is the critical line that was missing
   await NotificationService.init();
 
-  runApp(MyApp(dbService: dbService));
+  // The DBService is now static, so we don't need to pass it.
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, required this.dbService});
-
-  final DBService dbService;
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // The MedicineProvider can now create its own DBService instance or use the static methods
     return ChangeNotifierProvider(
-      create: (_) => MedicineProvider(dbService),
+      create: (_) => MedicineProvider(DBService()),
       child: MaterialApp(
         title: AppStrings.appName,
         theme: AppTheme.lightTheme,
