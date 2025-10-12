@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../../../../models/medicine.dart';
 import '../../../../services/db_service.dart';
@@ -30,12 +31,11 @@ class MedicineProvider extends ChangeNotifier {
     await _dbService.addMedicine(medicine);
 
     // Schedule the notification
-    await NotificationService.scheduleNotification(
-      medicine.id.hashCode, // Use a unique ID for the notification
-      medicine.name,
-      'Time to take your ${medicine.dosage} dose',
-      medicine.hour,
-      medicine.minute,
+    await NotificationService.scheduleMedicineReminder(
+      id: medicine.id.hashCode, // Use a unique ID for the notification
+      medicineName: medicine.name,
+      dosage: medicine.dosage,
+      time: medicine.time,
     );
 
     // No need to call notifyListeners() here, the stream will do it
@@ -49,7 +49,7 @@ class MedicineProvider extends ChangeNotifier {
   Future<void> deleteMedicine(int index) async {
     // Before deleting, cancel the notification
     final medicine = _medicines[index];
-    await NotificationService.cancelNotification(medicine.id.hashCode);
+    await NotificationService.cancelReminder(medicine.id.hashCode);
 
     await _dbService.deleteMedicine(index);
     // No need to call notifyListeners() here, the stream will do it

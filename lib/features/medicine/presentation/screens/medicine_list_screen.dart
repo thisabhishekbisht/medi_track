@@ -74,7 +74,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                 },
                 onEdit: () async {
                   final updated = await Navigator.of(context).pushNamed(
-                    AppRoutes.add, // Assuming add screen is for editing too
+                    '/add', // Assuming add screen is for editing too
                     arguments: medicine,
                   );
 
@@ -93,7 +93,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).pushNamed(AppRoutes.add);
+          Navigator.of(context).pushNamed('/add');
         },
         child: const Icon(Icons.add),
       ),
