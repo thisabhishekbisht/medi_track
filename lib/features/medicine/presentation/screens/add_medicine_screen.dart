@@ -29,10 +29,17 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     _time = widget.medicine?.time ?? TimeOfDay.now();
   }
 
+  // Force the time picker to a 12-hour format
   Future<void> _selectTime(BuildContext context) async {
     final picked = await showTimePicker(
       context: context,
       initialTime: _time,
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != _time) {
       setState(() {
@@ -41,7 +48,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     }
   }
 
-  void _submit() {
+  // Make submit asynchronous to ensure saving completes before popping
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
@@ -55,17 +63,20 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         minute: _time.minute,
       );
 
+      // Await the provider action to ensure it completes
       if (_isEditing) {
-        // Find the index of the medicine being edited
         final index = provider.medicines.indexWhere((m) => m.id == widget.medicine!.id);
         if (index != -1) {
-           provider.updateMedicine(index, newMedicine);
+          await provider.updateMedicine(index, newMedicine);
         }
       } else {
-        provider.addMedicine(newMedicine);
+        await provider.addMedicine(newMedicine);
       }
 
-      Navigator.of(context).pop(newMedicine); // Return the saved medicine
+      // Only pop the screen after the operation is complete
+      if (mounted) { // Check if the widget is still in the tree
+          Navigator.of(context).pop();
+      }
     }
   }
 
