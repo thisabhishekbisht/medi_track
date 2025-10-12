@@ -5,8 +5,20 @@ import '../../../../models/medicine.dart';
 import '../providers/medicine_provider.dart';
 import 'add_medicine_screen.dart';
 
-class MedicineListScreen extends StatelessWidget {
+class MedicineListScreen extends StatefulWidget {
   const MedicineListScreen({super.key});
+
+  @override
+  State<MedicineListScreen> createState() => _MedicineListScreenState();
+}
+
+class _MedicineListScreenState extends State<MedicineListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load medicines when the screen is first displayed
+    Provider.of<MedicineProvider>(context, listen: false).loadMedicines();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,46 +31,49 @@ class MedicineListScreen extends StatelessWidget {
       ),
       body: provider.medicines.isEmpty
           ? const Center(
-        child: Text(
-          "💊 No medicines added yet.\nTap + to add one!",
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
-      )
+              child: Text(
+                "💊 No medicines added yet.\nTap + to add one!",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            )
           : ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: provider.medicines.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 14),
-        itemBuilder: (context, index) {
-          final medicine = provider.medicines[index];
-          return MedicineCard(
-            medicine: medicine,
-            onUpdate: (updated) =>
-                provider.updateMedicine(index, updated),
-            onDelete: () => provider.deleteMedicine(index),
-          );
-        },
-      ),
+              padding: const EdgeInsets.all(16),
+              itemCount: provider.medicines.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 14),
+              itemBuilder: (context, index) {
+                final medicine = provider.medicines[index];
+                return MedicineCard(
+                  medicine: medicine,
+                  onUpdate: (updated) =>
+                      provider.updateMedicine(index, updated),
+                  onDelete: () => provider.deleteMedicine(index),
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          // 👇 wait for result
-          final result = await Navigator.push(
+        onPressed: () {
+          Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AddMedicineScreen()),
-          );
-
-          if (result != null && result is Medicine) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                backgroundColor: Colors.teal,
-                content: Text("⏰ Alarm set for ${result.name}"),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          }
+          ).then((result) {
+            if (result != null && result is Medicine) {
+              _showSnackbar("⏰ Alarm set for ${result.name}", color: Colors.teal);
+            }
+          });
         },
         icon: const Icon(Icons.add),
         label: const Text("Add Medicine"),
+      ),
+    );
+  }
+
+  void _showSnackbar(String message, {Color color = Colors.black}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: color,
+        content: Text(message),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -111,14 +126,10 @@ class MedicineCard extends StatelessWidget {
                 children: [
                   Text(
                     medicine.name,
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17,
-                    ),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                        ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -126,23 +137,15 @@ class MedicineCard extends StatelessWidget {
                     style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                   ),
                   const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    children: medicine.times
-                        .map(
-                          (time) =>
-                          Chip(
-                            label: Text(time,
-                                style: const TextStyle(
-                                    fontSize: 12, color: Colors.teal)),
-                            backgroundColor: Colors.teal.withOpacity(0.1),
-                            materialTapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: -2),
-                          ),
-                    )
-                        .toList(),
+                  Chip(
+                    label: Text(medicine.time.format(context),
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.teal)),
+                    backgroundColor: Colors.teal.withOpacity(0.1),
+                    materialTapTargetSize:
+                        MaterialTapTargetSize.shrinkWrap,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: -2),
                   ),
                 ],
               ),
@@ -162,22 +165,17 @@ class MedicineCard extends StatelessWidget {
                         id: medicine.id,
                         name: medicine.name,
                         dosage: medicine.dosage,
-                        times: medicine.times,
+                        hour: medicine.hour,
+                        minute: medicine.minute,
                         isActive: value,
                       );
                       onUpdate(updated);
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          backgroundColor:
-                          value ? Colors.green : Colors.grey[850],
-                          content: Text(
-                            value
-                                ? "🔔 Reminders for ${medicine.name} enabled"
-                                : "🔕 Reminders for ${medicine.name} disabled",
-                          ),
-                          duration: const Duration(seconds: 2),
-                        ),
+                      _showSnackbar(
+                        value
+                            ? "🔔 Reminders for ${medicine.name} enabled"
+                            : "🔕 Reminders for ${medicine.name} disabled",
+                        color: value ? Colors.green : Colors.grey[850]!,
                       );
                     },
                   ),
@@ -188,26 +186,21 @@ class MedicineCard extends StatelessWidget {
                       icon: const Icon(Icons.edit,
                           size: 18, color: Colors.blueAccent),
                       tooltip: "Edit",
-                      onPressed: () async {
-                        // 👇 wait for result
-                        final result = await Navigator.push(
+                      onPressed: () {
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) =>
                                 AddMedicineScreen(existingMedicine: medicine),
                           ),
-                        );
-
-                        if (result != null && result is Medicine) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor: Colors.blueAccent,
-                              content: Text(
-                                  "✏️ Updated reminder for ${result.name}"),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        }
+                        ).then((result) {
+                          if (result != null && result is Medicine) {
+                            _showSnackbar(
+                              "✏️ Updated reminder for ${result.name}",
+                              color: Colors.blueAccent,
+                            );
+                          }
+                        });
                       },
                     ),
                     IconButton(
@@ -229,58 +222,63 @@ class MedicineCard extends StatelessWidget {
   void _showDeleteDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) =>
-          Dialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.warning, color: Colors.red, size: 40),
-                  const SizedBox(height: 10),
-                  Text("Delete Reminder?",
-                      style: Theme
-                          .of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Are you sure you want to delete '${medicine.name}'?",
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text("Cancel")),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.redAccent),
-                          onPressed: () {
-                            onDelete();
-                            Navigator.pop(context);
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: Colors.redAccent,
-                                content: Text("❌ Deleted ${medicine.name}"),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
-                          },
-                          child: const Text("Confirm")),
-                    ],
-                  )
-                ],
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.warning, color: Colors.red, size: 40),
+              const SizedBox(height: 10),
+              Text("Delete Reminder?",
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text(
+                "Are you sure you want to delete '${medicine.name}'?",
+                textAlign: TextAlign.center,
               ),
-            ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Cancel")),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent),
+                    onPressed: () {
+                      onDelete();
+                      Navigator.pop(context);
+
+                      _showSnackbar(
+                        "❌ Deleted ${medicine.name}",
+                        color: Colors.redAccent,
+                      );
+                    },
+                    child: const Text("Confirm"),
+                  ),
+                ],
+              )
+            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showSnackbar(String message, {required Color color}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: color,
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 }

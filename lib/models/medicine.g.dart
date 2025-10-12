@@ -20,15 +20,16 @@ class MedicineAdapter extends TypeAdapter<Medicine> {
       id: fields[0] as String?,
       name: fields[1] as String,
       dosage: fields[2] as String,
-      times: (fields[3] as List).cast<String>(),
-      isActive: fields[4] as bool,
+      hour: fields[3] as int,
+      minute: fields[4] as int,
+      isActive: fields[5] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, Medicine obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -36,8 +37,10 @@ class MedicineAdapter extends TypeAdapter<Medicine> {
       ..writeByte(2)
       ..write(obj.dosage)
       ..writeByte(3)
-      ..write(obj.times)
+      ..write(obj.hour)
       ..writeByte(4)
+      ..write(obj.minute)
+      ..writeByte(5)
       ..write(obj.isActive);
   }
 

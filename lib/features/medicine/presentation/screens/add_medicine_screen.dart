@@ -30,12 +30,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     if (widget.existingMedicine != null) {
       _nameController.text = widget.existingMedicine!.name;
       _dosageController.text = widget.existingMedicine!.dosage;
-      _timeController.text = widget.existingMedicine!.times.join(", ");
-      final firstTime = widget.existingMedicine!.times.first.split(":");
-      _selectedTime = TimeOfDay(
-        hour: int.tryParse(firstTime[0]) ?? 8,
-        minute: int.tryParse(firstTime[1]) ?? 0,
-      );
+      _selectedTime = widget.existingMedicine!.time;
+      _timeController.text = _selectedTime!.format(context);
     }
   }
 
@@ -128,7 +124,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                         onTap: () async {
                           final picked = await showTimePicker(
                             context: context,
-                            initialTime: TimeOfDay.now(),
+                            initialTime: _selectedTime ?? TimeOfDay.now(),
                           );
                           if (picked != null) {
                             setState(() {
@@ -163,7 +159,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                                   id: id,
                                   name: _nameController.text.trim(),
                                   dosage: _dosageController.text.trim(),
-                                  times: [_timeController.text.trim()],
+                                  hour: _selectedTime!.hour,
+                                  minute: _selectedTime!.minute,
                                   isActive:
                                       widget.existingMedicine?.isActive ?? true,
                                 );
@@ -171,8 +168,11 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                                 if (isEditing) {
                                   final index = provider.medicines
                                       .indexWhere((m) => m.id == updated.id);
-                                  await provider.updateMedicine(index, updated);
+                                  if (index != -1) {
+                                    await provider.updateMedicine(index, updated);
+                                  } // Handle case where index is not found?
 
+                                  // Cancel old notification before scheduling a new one
                                   await NotificationService.cancelReminder(
                                       updated.id.hashCode);
                                 } else {
@@ -192,8 +192,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                                 }
 
                                 if (context.mounted) {
-                                  Navigator.pop(context,
-                                      updated); // return medicine regardless
+                                  Navigator.pop(context, updated);
                                 }
                               }
                             },
@@ -245,5 +244,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _dosageController.dispose();
+    _timeController.dispose();
+    super.dispose();
   }
 }

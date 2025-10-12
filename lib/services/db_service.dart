@@ -3,7 +3,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/medicine.dart';
 
 class DBService {
-  static const String boxName = 'medicines';
+  static const String _boxName = 'medicines';
+  static late final Box<Medicine> _box;
 
   /// Initialize Hive and open medicine box
   static Future<void> init() async {
@@ -11,37 +12,35 @@ class DBService {
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(MedicineAdapter());
     }
-    await Hive.openBox<Medicine>(boxName);
+    _box = await Hive.openBox<Medicine>(_boxName);
   }
+
+  /// Provides a stream of box events
+  Stream<BoxEvent> get watch => _box.watch();
 
   /// Add new medicine
   Future<void> addMedicine(Medicine medicine) async {
-    final box = Hive.box<Medicine>(boxName);
-    await box.add(medicine);
+    await _box.add(medicine);
     print("✅ Medicine stored: ${medicine.name}");
   }
 
   /// Get all medicines
   List<Medicine> getAllMedicines() {
-    final box = Hive.box<Medicine>(boxName);
-    return box.values.toList();
+    return _box.values.toList();
   }
 
   /// Update medicine by index
   Future<void> updateMedicine(int index, Medicine updated) async {
-    final box = Hive.box<Medicine>(boxName);
-    await box.putAt(index, updated);
+    await _box.putAt(index, updated);
   }
 
   /// Delete medicine by index
   Future<void> deleteMedicine(int index) async {
-    final box = Hive.box<Medicine>(boxName);
-    await box.deleteAt(index);
+    await _box.deleteAt(index);
   }
 
   /// Clear all medicines
   Future<void> clearMedicines() async {
-    final box = Hive.box<Medicine>(boxName);
-    await box.clear();
+    await _box.clear();
   }
 }

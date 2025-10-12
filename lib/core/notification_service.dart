@@ -1,12 +1,7 @@
 import 'dart:io';
-import 'dart:io';
 import 'dart:typed_data'; // for Int64List
 
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -50,16 +45,21 @@ class NotificationService {
     // create channel for Android
     await _createChannel();
 
-    // Request runtime permission on Android 13+
+    // Request runtime permission on Android
     if (Platform.isAndroid) {
       await _requestAndroidPermissions();
     }
   }
 
   static Future<void> _requestAndroidPermissions() async {
-    // POST_NOTIFICATIONS permission for Android 13+
+    // Request notification permission
     if (await Permission.notification.isDenied) {
       await Permission.notification.request();
+    }
+
+    // Request exact alarm permission
+    if (await Permission.scheduleExactAlarm.isDenied) {
+      await Permission.scheduleExactAlarm.request();
     }
   }
 
@@ -73,31 +73,10 @@ class NotificationService {
       enableVibration: true,
     );
 
-    final androidDetails = AndroidNotificationDetails(
-      _channelId,
-      _channelName,
-      channelDescription: _channelDescription,
-      importance: Importance.max,
-      priority: Priority.high,
-      playSound: true,
-      enableVibration: true,
-      vibrationPattern: Int64List.fromList(<int>[0, 500, 200, 500]),
-      // sound: RawResourceAndroidNotificationSound('alarm'), // optional custom sound
-      // additionalFlags: Int32List.fromList([4]) // rarely needed
-    );
-
-    // create channel via plugin
     await _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(androidChannel);
-
-    // Also call with details to ensure plugin has channel info (not strictly necessary)
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(androidChannel);
-
   }
 
   // Handler when notification is tapped
@@ -115,7 +94,6 @@ class NotificationService {
     required TimeOfDay time,
     String? payload,
   }) async {
-    // Ensure plugin initialized
     // Build Android/iOS details
     final androidDetails = AndroidNotificationDetails(
       _channelId,

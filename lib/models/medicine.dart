@@ -1,5 +1,4 @@
 import 'package:hive/hive.dart';
-
 import 'package:uuid/uuid.dart';
 
 part 'medicine.g.dart';
@@ -16,16 +15,22 @@ class Medicine extends HiveObject {
   final String dosage;
 
   @HiveField(3)
-  final List<String> times;
+  final int hour;
 
   @HiveField(4)
+  final int minute;
+
+  @HiveField(5)
   final bool isActive;
 
   Medicine({
     String? id,
     required this.name,
     required this.dosage,
-    required this.times,
-    required this.isActive,
-  }) : id = id ?? const Uuid().v4(); // 👈 auto-generate if null
+    required this.hour,
+    required this.minute,
+    this.isActive = true,
+  }) : id = id ?? const Uuid().v4();
+
+  TimeOfDay get time => TimeOfDay(hour: hour, minute: minute);
 }

@@ -12,20 +12,37 @@ Future<void> main() async {
 
   // ✅ Initialize Hive/DB before the app starts
   await DBService.init();
-  await NotificationService.init();  // 👈 call static method directly
+  await NotificationService.init(); // 👈 call static method directly
   runApp(const MediTrackApp());
 }
 
-class MediTrackApp extends StatelessWidget {
+class MediTrackApp extends StatefulWidget {
   const MediTrackApp({super.key});
+
+  @override
+  State<MediTrackApp> createState() => _MediTrackAppState();
+}
+
+class _MediTrackAppState extends State<MediTrackApp> {
+  late final MedicineProvider _medicineProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _medicineProvider = MedicineProvider(DBService());
+  }
+
+  @override
+  void dispose() {
+    _medicineProvider.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => MedicineProvider(DBService()),
-        ),
+        ChangeNotifierProvider.value(value: _medicineProvider),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
