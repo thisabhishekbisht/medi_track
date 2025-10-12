@@ -6,7 +6,6 @@ import 'core/constants/strings.dart';
 import 'core/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/medicine/presentation/providers/medicine_provider.dart';
-import 'models/medicine.dart';
 import 'services/db_service.dart';
 
 void main() async {
@@ -15,13 +14,8 @@ void main() async {
 
   // Initialize services
   final dbService = DBService();
-  await dbService.init();
+  // await dbService.init(); // This was incorrect, DBService does not have an init method
   await NotificationService.init();
-
-  // For testing: add a dummy medicine
-  // await dbService.addMedicine(
-  //   Medicine(name: 'Aspirin', dosage: '1 tablet', hour: 14, minute: 30),
-  // );
 
   runApp(MyApp(dbService: dbService));
 }

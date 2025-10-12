@@ -1,63 +1,57 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 
 import '../../../../models/medicine.dart';
 import '../../../../services/db_service.dart';
-import '../../../../core/notification_service.dart';
 
 class MedicineProvider extends ChangeNotifier {
   final DBService _dbService;
-  late final StreamSubscription _streamSubscription;
 
+  // The list of medicines. It's initialized directly.
   List<Medicine> _medicines = [];
+
+  // Public getter for the medicines list.
   List<Medicine> get medicines => _medicines;
 
+  // A flag to indicate if data is being loaded.
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
   MedicineProvider(this._dbService) {
+    // Load medicines synchronously when the provider is created.
     _loadMedicines();
-    // Listen to changes in the database
-    _streamSubscription = _dbService.watch.listen((event) {
-      _loadMedicines();
-    });
   }
 
+  // Load medicines from the DB service.
   void _loadMedicines() {
+    _setLoading(true);
+    // getAllMedicines is synchronous as per the DBService interface.
     _medicines = _dbService.getAllMedicines();
-    notifyListeners();
+    _setLoading(false);
   }
 
+  // Add a new medicine and then reload the list from the DB.
   Future<void> addMedicine(Medicine medicine) async {
     await _dbService.addMedicine(medicine);
-
-    // Schedule the notification
-    await NotificationService.scheduleMedicineReminder(
-      id: medicine.id.hashCode, // Use a unique ID for the notification
-      medicineName: medicine.name,
-      dosage: medicine.dosage,
-      time: medicine.time,
-    );
-
-    // No need to call notifyListeners() here, the stream will do it
+    _loadMedicines(); // Reload synchronously
   }
 
+  // Update an existing medicine by its list index.
   Future<void> updateMedicine(int index, Medicine medicine) async {
+    // The DB service expects the integer index for updates.
     await _dbService.updateMedicine(index, medicine);
-    // No need to call notifyListeners() here, the stream will do it
+    _loadMedicines(); // Reload synchronously
   }
 
+  // Delete a medicine by its list index.
   Future<void> deleteMedicine(int index) async {
-    // Before deleting, cancel the notification
-    final medicine = _medicines[index];
-    await NotificationService.cancelReminder(medicine.id.hashCode);
-
+    // The DB service expects the integer index for deletion.
     await _dbService.deleteMedicine(index);
-    // No need to call notifyListeners() here, the stream will do it
+    _loadMedicines(); // Reload synchronously
   }
 
-  @override
-  void dispose() {
-    _streamSubscription.cancel();
-    super.dispose();
+  // Helper to manage loading state and notify listeners.
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
   }
 }

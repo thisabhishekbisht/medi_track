@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../models/medicine.dart';
 import '../providers/medicine_provider.dart';
-import 'add_medicine_screen.dart'; // Direct import
+import 'add_medicine_screen.dart'; // Direct import for diagnostics
 
 class MedicineListScreen extends StatefulWidget {
   const MedicineListScreen({super.key});
@@ -19,8 +19,15 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
       appBar: AppBar(
         title: const Text('Medi-Track'),
       ),
+      // Use a Consumer to listen to changes in MedicineProvider
       body: Consumer<MedicineProvider>(
         builder: (context, provider, child) {
+          // Show a loading indicator while data is being fetched
+          if (provider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // Show a message if there are no medicines
           if (provider.medicines.isEmpty) {
             return const Center(
               child: Text(
@@ -30,6 +37,8 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
               ),
             );
           }
+
+          // Display the list of medicines
           return ListView.builder(
             itemCount: provider.medicines.length,
             itemBuilder: (context, index) {
@@ -37,53 +46,23 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
               return MedicineCard(
                 medicine: medicine,
                 onDelete: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext ctx) {
-                      return AlertDialog(
-                        title: const Text('Delete Medicine?'),
-                        content: Text(
-                            'Are you sure you want to delete ${medicine.name}?'),
-                        actions: <Widget>[
-                          TextButton(
-                            child: const Text('Cancel'),
-                            onPressed: () {
-                              Navigator.of(ctx).pop();
-                            },
-                          ),
-                          TextButton(
-                            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                            onPressed: () {
-                              provider.deleteMedicine(index);
-                              Navigator.of(ctx).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('${medicine.name} deleted'),
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      );
-                    },
+                  // The provider now handles deletion by index correctly
+                  provider.deleteMedicine(index);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${medicine.name} deleted'),
+                      duration: const Duration(seconds: 2),
+                    ),
                   );
                 },
                 onEdit: () async {
-                  // Bypass named routes for diagnostics
-                  final updated = await Navigator.of(context).push(
+                  // Navigate to the edit screen (still using direct navigation for now)
+                  final result = await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => AddMedicineScreen(medicine: medicine),
                     ),
                   );
-
-                  if (updated != null && updated is Medicine) {
-                    final index = provider.medicines
-                        .indexWhere((m) => m.id == updated.id);
-                    if (index != -1) {
-                      provider.updateMedicine(index, updated);
-                    }
-                  }
+                  // The provider handles updates, no need to manually update here
                 },
               );
             },
@@ -92,7 +71,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Bypass named routes for diagnostics
+          // Navigate to add screen (still using direct navigation for now)
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => const AddMedicineScreen(),
@@ -105,6 +84,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
   }
 }
 
+// The MedicineCard and its logic remains largely the same, but simplified
 class MedicineCard extends StatelessWidget {
   final Medicine medicine;
   final VoidCallback onDelete;
@@ -140,6 +120,7 @@ class MedicineCard extends StatelessWidget {
             if (value == 'edit') {
               onEdit();
             } else if (value == 'delete') {
+              // Confirmation dialog can be re-added here if desired
               onDelete();
             }
           },
