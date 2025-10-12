@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../models/medicine.dart';
 import '../providers/medicine_provider.dart';
-import 'add_medicine_screen.dart'; // Direct import for diagnostics
+import 'add_medicine_screen.dart';
 
 class MedicineListScreen extends StatefulWidget {
   const MedicineListScreen({super.key});
@@ -19,15 +19,12 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
       appBar: AppBar(
         title: const Text('Medi-Track'),
       ),
-      // Use a Consumer to listen to changes in MedicineProvider
       body: Consumer<MedicineProvider>(
         builder: (context, provider, child) {
-          // Show a loading indicator while data is being fetched
-          if (provider.isLoading) {
+          if (provider.isLoading && provider.medicines.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Show a message if there are no medicines
           if (provider.medicines.isEmpty) {
             return const Center(
               child: Text(
@@ -38,7 +35,6 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
             );
           }
 
-          // Display the list of medicines
           return ListView.builder(
             itemCount: provider.medicines.length,
             itemBuilder: (context, index) {
@@ -46,7 +42,6 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
               return MedicineCard(
                 medicine: medicine,
                 onDelete: () {
-                  // The provider now handles deletion by index correctly
                   provider.deleteMedicine(index);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -56,13 +51,11 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                   );
                 },
                 onEdit: () async {
-                  // Navigate to the edit screen (still using direct navigation for now)
                   final result = await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => AddMedicineScreen(medicine: medicine),
                     ),
                   );
-                  // The provider handles updates, no need to manually update here
                 },
               );
             },
@@ -71,7 +64,6 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to add screen (still using direct navigation for now)
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => const AddMedicineScreen(),
@@ -84,7 +76,6 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
   }
 }
 
-// The MedicineCard and its logic remains largely the same, but simplified
 class MedicineCard extends StatelessWidget {
   final Medicine medicine;
   final VoidCallback onDelete;
@@ -97,9 +88,20 @@ class MedicineCard extends StatelessWidget {
     required this.onEdit,
   });
 
+  // Helper to format TimeOfDay to a 12-hour AM/PM string
+  String _formatTime(BuildContext context, TimeOfDay time) {
+    // Use the MaterialLocalizations to format the time, which respects the device's 12/24 hour format settings.
+    // Or, for a forced 12-hour format:
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour:$minute $period';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final time = medicine.time.format(context);
+    final timeString = _formatTime(context, medicine.time);
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
@@ -112,7 +114,7 @@ class MedicineCard extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         subtitle: Text(
-          '${medicine.dosage} - Every day at $time',
+          '${medicine.dosage} - Every day at $timeString',
           style: const TextStyle(color: Colors.black54, fontSize: 14),
         ),
         trailing: PopupMenuButton<String>(
@@ -120,7 +122,6 @@ class MedicineCard extends StatelessWidget {
             if (value == 'edit') {
               onEdit();
             } else if (value == 'delete') {
-              // Confirmation dialog can be re-added here if desired
               onDelete();
             }
           },

@@ -1,57 +1,79 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
+import '../../../../core/notification_service.dart';
 import '../../../../models/medicine.dart';
 import '../../../../services/db_service.dart';
 
 class MedicineProvider extends ChangeNotifier {
   final DBService _dbService;
 
-  // The list of medicines. It's initialized directly.
   List<Medicine> _medicines = [];
-
-  // Public getter for the medicines list.
   List<Medicine> get medicines => _medicines;
 
-  // A flag to indicate if data is being loaded.
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
   MedicineProvider(this._dbService) {
-    // Load medicines synchronously when the provider is created.
     _loadMedicines();
   }
 
-  // Load medicines from the DB service.
   void _loadMedicines() {
     _setLoading(true);
-    // getAllMedicines is synchronous as per the DBService interface.
     _medicines = _dbService.getAllMedicines();
     _setLoading(false);
   }
 
-  // Add a new medicine and then reload the list from the DB.
   Future<void> addMedicine(Medicine medicine) async {
     await _dbService.addMedicine(medicine);
-    _loadMedicines(); // Reload synchronously
+
+    // Schedule the notification for the new medicine
+    await NotificationService.scheduleMedicineReminder(
+      id: medicine.id.hashCode, // Use a unique int ID
+      medicineName: medicine.name,
+      dosage: medicine.dosage,
+      time: medicine.time,
+    );
+
+    _loadMedicines(); // Reload list from DB
   }
 
-  // Update an existing medicine by its list index.
-  Future<void> updateMedicine(int index, Medicine medicine) async {
-    // The DB service expects the integer index for updates.
-    await _dbService.updateMedicine(index, medicine);
-    _loadMedicines(); // Reload synchronously
+  Future<void> updateMedicine(int index, Medicine newMedicine) async {
+    // Get the old medicine to cancel its notification
+    final oldMedicine = _medicines[index];
+
+    // Cancel the old reminder first
+    await NotificationService.cancelReminder(oldMedicine.id.hashCode);
+
+    // Update in the database
+    await _dbService.updateMedicine(index, newMedicine);
+
+    // Schedule a new reminder with the updated details
+    await NotificationService.scheduleMedicineReminder(
+      id: newMedicine.id.hashCode, // Use the same ID
+      medicineName: newMedicine.name,
+      dosage: newMedicine.dosage,
+      time: newMedicine.time,
+    );
+
+    _loadMedicines(); // Reload list from DB
   }
 
-  // Delete a medicine by its list index.
   Future<void> deleteMedicine(int index) async {
-    // The DB service expects the integer index for deletion.
+    final medicineToDelete = _medicines[index];
+
+    // Cancel the notification before deleting
+    await NotificationService.cancelReminder(medicineToDelete.id.hashCode);
+
+    // Delete from the database
     await _dbService.deleteMedicine(index);
-    _loadMedicines(); // Reload synchronously
+
+    _loadMedicines(); // Reload list from DB
   }
 
-  // Helper to manage loading state and notify listeners.
   void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
+    if (_isLoading != loading) {
+      _isLoading = loading;
+      notifyListeners();
+    }
   }
 }
