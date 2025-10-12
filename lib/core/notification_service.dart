@@ -22,15 +22,10 @@ class NotificationService {
     tz.initializeTimeZones();
     // set local location to device timezone
     try {
-      final String local = DateTime.now().timeZoneName;
-      // best-effort; tz.local is already set but this avoids some platform issues
       tz.setLocalLocation(tz.getLocation(tz.local.name));
     } catch (_) {}
 
-    // Android initialization
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    // iOS initialization (if needed)
     final iosInit = DarwinInitializationSettings(
       requestSoundPermission: true,
       requestBadgePermission: true,
@@ -43,22 +38,49 @@ class NotificationService {
     await _plugin.initialize(initSettings,
         onDidReceiveNotificationResponse: _onNotificationResponse);
 
-    // create channel for Android
     await _createChannel();
 
-    // Request runtime permission on Android
     if (Platform.isAndroid) {
       await _requestAndroidPermissions();
     }
   }
 
+  /// Shows a notification. This is intended to be called from the background isolate.
+  static Future<void> showNotification({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    const androidDetails = AndroidNotificationDetails(
+      _channelId,
+      _channelName,
+      channelDescription: _channelDescription,
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+    );
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    final details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+
+    await _plugin.show(
+      id,
+      title,
+      body,
+      details,
+      payload: payload,
+    );
+  }
+
   static Future<void> _requestAndroidPermissions() async {
-    // Request notification permission
     if (await Permission.notification.isDenied) {
       await Permission.notification.request();
     }
-
-    // Request exact alarm permission
     if (await Permission.scheduleExactAlarm.isDenied) {
       await Permission.scheduleExactAlarm.request();
     }
@@ -80,14 +102,10 @@ class NotificationService {
         ?.createNotificationChannel(androidChannel);
   }
 
-  // Handler when notification is tapped
   static void _onNotificationResponse(NotificationResponse response) {
-    // handle taps if needed (navigate, open app, etc.)
     debugPrint('Notification tapped: ${response.id} ${response.payload}');
   }
 
-  /// Schedules a daily alarm at given TimeOfDay.
-  /// Use a unique int id (e.g. medicine.id.hashCode + index).
   static Future<void> scheduleMedicineReminder({
     required int id,
     required String medicineName,
@@ -95,7 +113,6 @@ class NotificationService {
     required TimeOfDay time,
     String? payload,
   }) async {
-    // Build Android/iOS details
     final androidDetails = AndroidNotificationDetails(
       _channelId,
       _channelName,
@@ -106,21 +123,17 @@ class NotificationService {
       enableVibration: true,
       vibrationPattern: Int64List.fromList(<int>[0, 500, 200, 500]),
       styleInformation: const DefaultStyleInformation(true, true),
-      // If you added a custom sound in android/app/src/main/res/raw named alarm.mp3:
-      // sound: RawResourceAndroidNotificationSound('alarm'),
     );
 
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
-      // sound: 'alarm.aiff' // if you provided sound on iOS bundle
     );
 
     final details =
         NotificationDetails(android: androidDetails, iOS: iosDetails);
 
-    // Compute next instance of the time
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(
       tz.local,
@@ -136,7 +149,6 @@ class NotificationService {
     }
     debugPrint('Scheduling notification with id: $id at $scheduled');
 
-    // Schedule the notification
     await _plugin.zonedSchedule(
       id,
       "Time to take your medicine 💊",
@@ -146,28 +158,27 @@ class NotificationService {
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time, // repeats daily
+      matchDateTimeComponents: DateTimeComponents.time,
       payload: payload,
     );
 
-    // Schedule background task
     if (Platform.isAndroid) {
       final initialDelay = scheduled.difference(now);
       await Workmanager().registerPeriodicTask(
         id.toString(),
-        "reschedule a notification",
+        "reschedule-notification-task",
         frequency: const Duration(days: 1),
         initialDelay: initialDelay,
         inputData: <String, dynamic>{
+          'id': id, // Pass ID to background task
           'title': "Time to take your medicine 💊",
-          'body': "$medicineName (${dosage.isNotEmpty ? dosage : 'dose'})",
+          'body": "$medicineName (${dosage.isNotEmpty ? dosage : 'dose'})",
           'payload': payload,
         },
       );
     }
   }
 
-  /// Cancel a scheduled reminder by int id
   static Future<void> cancelReminder(int id) async {
     await _plugin.cancel(id);
     if (Platform.isAndroid) {
@@ -181,30 +192,4 @@ class NotificationService {
       await Workmanager().cancelAll();
     }
   }
-
-  /// For testing: show immediate notification (useful to test sound/vibration)
-  static Future<void> showImmediateTestNotification({
-    required int id,
-    required String title,
-    required String body,
-  }) =>
-      _plugin.show(
-        id,
-        title,
-        body,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            _channelId,
-            _channelName,
-            channelDescription: _channelDescription,
-            importance: Importance.max,
-            priority: Priority.high,
-            playSound: true,
-            enableVibration: true,
-            vibrationPattern: Int64List.fromList(<int>[0, 500, 200, 500]),
-          ),
-          iOS:
-              DarwinNotificationDetails(presentSound: true, presentAlert: true),
-        ),
-      );
 }

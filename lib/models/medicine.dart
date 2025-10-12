@@ -34,4 +34,9 @@ class Medicine extends HiveObject {
   }) : id = id ?? const Uuid().v4();
 
   TimeOfDay get time => TimeOfDay(hour: hour, minute: minute);
+
+  /// We need a unique integer as a notification ID.
+  /// Using the first 8 characters of the UUID and converting to an integer
+  /// is a decent way to get a unique integer.
+  int get notificationId => id.substring(0, 8).hashCode;
 }

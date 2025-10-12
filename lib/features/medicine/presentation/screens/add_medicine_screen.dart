@@ -65,10 +65,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
       // Await the provider action to ensure it completes
       if (_isEditing) {
-        final index = provider.medicines.indexWhere((m) => m.id == widget.medicine!.id);
-        if (index != -1) {
-          await provider.updateMedicine(index, newMedicine);
-        }
+          await provider.updateMedicine(newMedicine);
       } else {
         await provider.addMedicine(newMedicine);
       }

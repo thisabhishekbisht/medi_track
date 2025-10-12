@@ -26,12 +26,22 @@ void main() async {
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) {
-    return NotificationService.showNotification(
-      title: inputData!['title'],
-      body: inputData['body'],
-      payload: inputData['payload'],
+  Workmanager().executeTask((task, inputData) async {
+    // The 'id' is crucial for displaying the notification.
+    final id = inputData!['id'] as int;
+    final title = inputData['title'] as String;
+    final body = inputData['body'] as String;
+    final payload = inputData['payload'] as String?;
+
+    // The notification service is already initialized, so we can directly call it.
+    await NotificationService.showNotification(
+      id: id,
+      title: title,
+      body: body,
+      payload: payload,
     );
+
+    return Future.value(true);
   });
 }
 

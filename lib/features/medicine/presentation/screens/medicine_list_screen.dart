@@ -42,7 +42,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
               return MedicineCard(
                 medicine: medicine,
                 onDelete: () {
-                  provider.deleteMedicine(index);
+                  provider.deleteMedicine(medicine.id);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('${medicine.name} deleted'),
