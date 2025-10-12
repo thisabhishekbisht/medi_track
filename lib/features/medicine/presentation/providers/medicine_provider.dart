@@ -5,26 +5,24 @@ import '../../../../models/medicine.dart';
 import '../../../../services/db_service.dart';
 
 class MedicineProvider extends ChangeNotifier {
-  final DBService _dbService;
-
   List<Medicine> _medicines = [];
   List<Medicine> get medicines => _medicines;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  MedicineProvider(this._dbService) {
+  MedicineProvider() {
     _loadMedicines();
   }
 
   void _loadMedicines() {
     _setLoading(true);
-    _medicines = _dbService.getAllMedicines();
+    _medicines = DBService.instance.getAllMedicines();
     _setLoading(false);
   }
 
   Future<void> addMedicine(Medicine medicine) async {
-    await _dbService.addMedicine(medicine);
+    await DBService.instance.addMedicine(medicine);
 
     // Schedule the notification for the new medicine
     await NotificationService.scheduleMedicineReminder(
@@ -45,7 +43,7 @@ class MedicineProvider extends ChangeNotifier {
     await NotificationService.cancelReminder(oldMedicine.id.hashCode);
 
     // Update in the database
-    await _dbService.updateMedicine(index, newMedicine);
+    await DBService.instance.updateMedicine(index, newMedicine);
 
     // Schedule a new reminder with the updated details
     await NotificationService.scheduleMedicineReminder(
@@ -65,7 +63,7 @@ class MedicineProvider extends ChangeNotifier {
     await NotificationService.cancelReminder(medicineToDelete.id.hashCode);
 
     // Delete from the database
-    await _dbService.deleteMedicine(index);
+    await DBService.instance.deleteMedicine(index);
 
     _loadMedicines(); // Reload list from DB
   }

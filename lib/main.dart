@@ -14,11 +14,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize services BEFORE running the app
-  await DBService.init(); // This is the critical line that was missing
+  await DBService.init(); 
   await NotificationService.init();
   WorkManagerService.initialize();
 
-  // The DBService is now static, so we don't need to pass it.
   runApp(const MyApp());
 }
 
@@ -27,16 +26,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The MedicineProvider can now create its own DBService instance or use the static methods
     return ChangeNotifierProvider(
-      create: (_) => MedicineProvider(DBService()),
+      create: (_) => MedicineProvider(),
       child: MaterialApp(
         title: AppStrings.appName,
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
-        // Use the route generator for all navigation
         onGenerateRoute: AppRoutes.generateRoute,
-        // The initial route is now handled by the generator
         initialRoute: AppRoutes.splash,
       ),
     );

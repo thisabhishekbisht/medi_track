@@ -6,6 +6,12 @@ class DBService {
   static const String _boxName = 'medicines';
   static late final Box<Medicine> _box;
 
+  // Private constructor
+  DBService._();
+
+  /// The single, static instance of this service.
+  static final DBService instance = DBService._();
+
   /// Initialize Hive and open medicine box
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -16,7 +22,7 @@ class DBService {
   }
 
   /// Provides a stream of box events
-  Stream<BoxEvent> get watch => _box.watch();
+  Stream<BoxEvent> watch() => _box.watch();
 
   /// Add new medicine
   Future<void> addMedicine(Medicine medicine) async {
