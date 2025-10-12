@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../../models/medicine.dart';
-import '../../../services/db_service.dart';
-import '../../../core/notification_service.dart';
+import '../../../../models/medicine.dart';
+import '../../../../services/db_service.dart';
+import '../../../../core/notification_service.dart';
 
 class MedicineProvider extends ChangeNotifier {
   final DBService _dbService;
@@ -38,12 +38,12 @@ class MedicineProvider extends ChangeNotifier {
       medicine.minute,
     );
 
-    notifyListeners();
+    // No need to call notifyListeners() here, the stream will do it
   }
 
   Future<void> updateMedicine(int index, Medicine medicine) async {
     await _dbService.updateMedicine(index, medicine);
-    notifyListeners();
+    // No need to call notifyListeners() here, the stream will do it
   }
 
   Future<void> deleteMedicine(int index) async {
@@ -52,7 +52,7 @@ class MedicineProvider extends ChangeNotifier {
     await NotificationService.cancelNotification(medicine.id.hashCode);
 
     await _dbService.deleteMedicine(index);
-    notifyListeners();
+    // No need to call notifyListeners() here, the stream will do it
   }
 
   @override
