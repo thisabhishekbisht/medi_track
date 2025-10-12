@@ -1,11 +1,14 @@
 import 'dart:io';
 import 'dart:typed_data'; // for Int64List
 
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+
+import 'alarm_service.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
@@ -133,7 +136,9 @@ class NotificationService {
     if (scheduled.isBefore(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }
+    debugPrint('Scheduling notification with id: $id at $scheduled');
 
+    // Schedule the notification
     await _plugin.zonedSchedule(
       id,
       "Time to take your medicine 💊",
@@ -146,11 +151,26 @@ class NotificationService {
       matchDateTimeComponents: DateTimeComponents.time, // repeats daily
       payload: payload,
     );
+
+    // Schedule a background task to log the alarm trigger time
+    if (Platform.isAndroid) {
+      await AndroidAlarmManager.oneShotAt(
+        scheduled,
+        // Ensure the id is unique and won't clash with other alarms
+        id + 1000, // Use a different ID for the alarm manager
+        printHello, // The function to run
+        exact: true,
+        wakeup: true,
+      );
+    }
   }
 
   /// Cancel a scheduled reminder by int id
   static Future<void> cancelReminder(int id) async {
     await _plugin.cancel(id);
+    if (Platform.isAndroid) {
+      await AndroidAlarmManager.cancel(id + 1000);
+    }
   }
 
   static Future<void> cancelAll() => _plugin.cancelAll();

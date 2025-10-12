@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 
 import 'core/app_routes.dart';
 import 'core/constants/strings.dart';
@@ -15,6 +16,7 @@ void main() async {
   // Initialize services BEFORE running the app
   await DBService.init(); // This is the critical line that was missing
   await NotificationService.init();
+  await AndroidAlarmManager.initialize();
 
   // The DBService is now static, so we don't need to pass it.
   runApp(const MyApp());
