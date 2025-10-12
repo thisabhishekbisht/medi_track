@@ -25,31 +25,29 @@ if (flutterVersionName == null) {
 
 android {
     namespace = "com.abhishek.meditrack.medi_track"
-    compileSdk = 36
+    compileSdk = 33
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-        coreLibraryDesugaringEnabled true
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     defaultConfig {
         applicationId = "com.abhishek.meditrack.medi_track"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 33
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
 
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "1.8"
     }
 
     dependencies {
-        implementation "org.jetbrains.kotlin:kotlin-stdlib:2.2.10"
-        implementation "androidx.core:core-ktx:1.17.0"
-        coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
+        implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.22"
+        implementation "androidx.core:core-ktx:1.9.0"
     }
 
     buildTypes {
