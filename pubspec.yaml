@@ -32,6 +32,9 @@ dependencies:
 
   # Others
   go_router: ^10.0.0
+  permission_handler: ^11.0.1
+  uuid: ^4.1.0
+  provider: ^6.0.5
 
 
 dev_dependencies:
